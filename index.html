@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vidya Saathi – Prototype</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f3f7f7;--card:#fff;--tx:#14262b;--mut:#5b6b70;--pri:#0b3c49;--acc:#ed7d31;--me:#d9fdd3;--bot:#fff;--line:#d5e3e3;--chat:#ece5dd}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0f1a1d;--card:#17262a;--tx:#e6f0f1;--mut:#9fb3b7;--pri:#14808a;--me:#1f5c4d;--bot:#22343a;--line:#2b4046;--chat:#10201f}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font-family:Calibri,"Segoe UI",system-ui,sans-serif}
+header{padding:16px 20px}header h1{margin:0;font-size:24px}header p{margin:4px 0 0;color:var(--mut);font-size:14px}
+main{display:flex;flex-wrap:wrap;gap:16px;padding:0 20px 24px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+#phone{flex:1 1 340px;max-width:430px;display:flex;flex-direction:column;height:600px}
+#dash{flex:1 1 340px;padding:16px}
+.top{background:var(--pri);color:#fff;padding:10px 14px;font-weight:600}
+.top small{display:block;font-weight:400;opacity:.8;font-size:12px}
+#chat{flex:1;overflow-y:auto;padding:12px;background:var(--chat);display:flex;flex-direction:column;gap:8px}
+.m{max-width:85%;padding:8px 11px;border-radius:10px;font-size:15px;line-height:1.35;white-space:pre-wrap}
+.bot{background:var(--bot);align-self:flex-start}.me{background:var(--me);align-self:flex-end}
+.tag{font-size:12px;color:var(--acc);font-weight:600;margin-top:4px;display:block}
+#chips{display:flex;gap:6px;flex-wrap:wrap;padding:8px 10px;border-top:1px solid var(--line)}
+button.chip{border:1px solid var(--pri);background:transparent;color:var(--pri);border-radius:16px;padding:5px 11px;font-size:13px;cursor:pointer}
+#bar{display:flex;gap:6px;padding:8px 10px;border-top:1px solid var(--line)}
+#bar input{flex:1;padding:9px 12px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--tx);font-size:15px}
+#bar button{border:0;background:var(--pri);color:#fff;border-radius:20px;padding:0 16px;font-size:15px;cursor:pointer}
+h2{margin:0 0 4px;font-size:18px}.sub{color:var(--mut);font-size:13px;margin:0 0 14px}
+.row{margin:10px 0}.row .l{display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px}
+.track{height:12px;background:var(--bg);border-radius:6px;overflow:hidden}.fill{height:100%;background:var(--acc);transition:width .4s}
+.live .l span:first-child::after{content:" ● live";color:var(--acc);font-size:12px}
+.note{font-size:12px;color:var(--mut);margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+</style></head><body>
+<header><h1>Vidya Saathi – prototype demo</h1><p>Socratic AI tutor on WhatsApp for Class 6–8, with a teacher view. Pick a subject and try a wrong answer.</p></header>
+<main>
+<section class="panel" id="phone"><div class="top">Vidya Saathi<small>online · Class 6–8 tutor</small></div>
+<div id="chat" aria-live="polite"></div><div id="chips"></div>
+<div id="bar"><input id="in" placeholder="Type your answer" autocomplete="off"><button id="send">Send</button></div></section>
+<section class="panel" id="dash"><h2>Teacher view</h2><p class="sub">Concept gaps in the class this week</p><div id="rows"></div>
+<p class="note">Sample class data plus your live session. Each wrong answer is traced to the earlier concept the student is missing.</p></section>
+</main>
+<script>
+const S={
+math:{name:"Math",q:"Let’s try fractions. What is 1/2 + 1/3?",
+ok:a=>/^(5\/6|0?\.83\d*)$/.test(a),
+mis:[{t:a=>a==="2/5",gap:"Common denominators (Class 5)",msg:"I see how you got 2/5: you added the tops and the bottoms. Quick check: is 2/5 bigger or smaller than 1/2 on its own? Think about it, then tell me."}],
+hint:["Let’s slow down. Can you find a number that both 2 and 3 divide into evenly?","Good. Turn 1/2 and 1/3 into fractions with that same bottom number. What do you get?"],
+ans:"1/2 = 3/6 and 1/3 = 2/6, so 3/6 + 2/6 = 5/6."},
+science:{name:"Science",q:"Why does the handle of a metal spoon get hot when the spoon sits in hot tea?",
+ok:a=>/conduct/.test(a),
+mis:[{t:a=>/(rise|rises|air|steam|vapou?r)/.test(a),gap:"Modes of heat transfer (Class 7)",msg:"Good thinking about heat moving up. But steam and air can flow, and a solid spoon cannot. How might heat travel through a solid metal, particle to particle?"}],
+hint:["Think about the spoon itself, not the air around it. How does heat get from one end of a solid to the other?","Hint: the word starts with “conduc…”. Can you finish it?"],
+ans:"Heat travels along the metal by conduction, from particle to particle."},
+social:{name:"Social",q:"Which is the longest peninsular river of India?",
+ok:a=>/godavari/.test(a),
+mis:[{t:a=>/(ganga|ganges|brahmaputra|indus)/.test(a),gap:"Peninsular vs Himalayan rivers (Class 6)",msg:"That is a very long river, but it starts in the Himalayas. Peninsular rivers belong to the plateau in the south. Which big southern river can you think of?"}],
+hint:["Think of rivers that flow across the Deccan plateau into the Bay of Bengal.","Hint: its name starts with G and it flows through Maharashtra, Telangana and Andhra Pradesh."],
+ans:"It is the Godavari."}};
+const gaps={"Common denominators (Class 5)":12,"Modes of heat transfer (Class 7)":7,"Peninsular vs Himalayan rivers (Class 6)":4,"Reading word problems (Class 6)":9};
+const live={};let cur=null,tries=0;
+const chat=document.getElementById("chat"),inp=document.getElementById("in");
+function say(t,who,tag){const d=document.createElement("div");d.className="m "+who;d.textContent=t;
+ if(tag){const s=document.createElement("span");s.className="tag";s.textContent=tag;d.appendChild(s)}
+ chat.appendChild(d);chat.scrollTop=chat.scrollHeight}
+function chips(){const c=document.getElementById("chips");c.innerHTML="";
+ Object.keys(S).forEach(k=>{const b=document.createElement("button");b.className="chip";b.textContent=S[k].name;b.onclick=()=>start(k);c.appendChild(b)})}
+function start(k){cur=k;tries=0;say(S[k].name,"me");say(S[k].q,"bot")}
+function render(){const max=Math.max(...Object.keys(gaps).map(k=>gaps[k]+(live[k]||0)));
+ document.getElementById("rows").innerHTML=Object.keys(gaps).map(k=>{const v=gaps[k]+(live[k]||0);
+ return `<div class="row ${live[k]?"live":""}"><div class="l"><span>${k}</span><span>${v} students</span></div><div class="track"><div class="fill" style="width:${v/max*100}%"></div></div></div>`}).join("")}
+function handle(raw){const a=raw.trim().toLowerCase().replace(/\s+/g,"");if(!a)return;say(raw.trim(),"me");
+ if(!cur){say("Tap a subject below to begin.","bot");return}
+ const q=S[cur];
+ if(q.ok(a)){say("Correct! You worked that out yourself. Tap another subject to keep going.","bot");cur=null;return}
+ tries++;const m=q.mis.find(x=>x.t(a));
+ if(m){live[m.gap]=(live[m.gap]||0)+(tries===1?1:0);say(m.msg,"bot","Gap spotted: "+m.gap);render();return}
+ if(tries<=q.hint.length){say(q.hint[tries-1],"bot");return}
+ say("Let’s work it out together. "+q.ans+" Try another subject when you are ready.","bot");cur=null}
+document.getElementById("send").onclick=()=>{handle(inp.value);inp.value=""};
+inp.addEventListener("keydown",e=>{if(e.key==="Enter"){handle(inp.value);inp.value=""}});
+say("Hi! I’m Vidya Saathi, your study buddy. I will guide you with hints instead of just giving answers. Which subject today?","bot");chips();render();
+</script></body></html>

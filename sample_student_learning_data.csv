@@ -1,0 +1,6 @@
+sample_record_id,grade,subject,concept_gap,example_status,notes
+SAMPLE-001,6,Math,Common denominators,needs_support,Fictional example; not connected to the prototype
+SAMPLE-002,7,Science,Modes of heat transfer,needs_support,Fictional example; use for documentation or test planning only
+SAMPLE-003,6,Social Studies,Peninsular vs Himalayan rivers,needs_support,Fictional example; no real student data
+SAMPLE-004,8,Math,Reading word problems,review,Fictional example concept; not currently detected by the app
+SAMPLE-005,7,Science,Conduction,demonstrated_understanding,Fictional example; not a measured student outcome
